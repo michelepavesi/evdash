@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+<group android:checkableBehavior="all" android:visible="true" android:enabled="true" android:id="@+id/groupGaugeMenu">
+<item android:checkable="true" android:checked="false" android:id="@+id/itemRPM">
+</item>
+<item android:checkable="true" android:checked="false" android:id="@+id/itemAmpLow">
+</item>
+<item android:checkable="true" android:checked="false" android:id="@+id/itemAmpHigh">
+</item>
+<item android:checkable="true" android:checked="false" android:id="@+id/itemVolts">
+</item>
+<item android:checkable="true" android:checked="false" android:id="@+id/itemTemp">
+</item>
+</group>
+</menu>

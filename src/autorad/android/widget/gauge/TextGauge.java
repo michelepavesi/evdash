@@ -3,6 +3,7 @@ package autorad.android.widget.gauge;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Location;
 
@@ -22,6 +23,7 @@ import autorad.android.sensor.DataType;
 
 public class TextGauge extends AbstractGauge implements SensorDataListener {
 
+	float lastAccuracy = 0;
 	float lastData = -1f;
 	LinearLayout baseLayout;
 	private HashMap<DataType, TextView> textDataViews = new HashMap<DataType, TextView>();
@@ -45,11 +47,15 @@ public class TextGauge extends AbstractGauge implements SensorDataListener {
 		addView(baseLayout);
 	    
 	    this.setClickable(true);
+	    this.setLongClickable(true);
 	    this.setFocusable(true);
 	    this.setFocusableInTouchMode(true);
 	    this.setOnTouchListener(new OnTouchListener() {
-			public boolean onTouch(View arg0, MotionEvent event) {
+	    	public boolean onTouch(View arg0, MotionEvent event) {
+	    		Log.d(C.TAG, "Got Touch on text gauge");
+				TextGauge.this.ctx.getParentOnTouchListener().onTouch(arg0, event);
 				onGaugeMotionEvent(event);
+
 				return false;
 			}
 		});
@@ -60,6 +66,10 @@ public class TextGauge extends AbstractGauge implements SensorDataListener {
 	    
 	}
 	
+	public void passivate() {}
+	
+	public void unpassivate() {}
+	
 	private void addDataSet(DataType dataType) {
 		
 		LinearLayout layout = new LinearLayout(ctx);
@@ -67,7 +77,7 @@ public class TextGauge extends AbstractGauge implements SensorDataListener {
 		
 		TextView textLabel = new TextView(ctx);
 		textLabel.setTextColor(0xFFFFFFFF);
-	    textLabel.setText(dataType.getLabel() + ":");
+	    textLabel.setText(ctx.getString(dataType.getLabelId()) + ":");
 	    allTextViews.add(textLabel);
 	    layout.addView(textLabel);
 		
@@ -88,7 +98,7 @@ public class TextGauge extends AbstractGauge implements SensorDataListener {
 	}
 	
 	
-	public void cleanup() {
+	public void destroy() {
 		
 		ctx = null;
 		gaugeType = null;
@@ -150,7 +160,9 @@ public class TextGauge extends AbstractGauge implements SensorDataListener {
 			textView.setText(String.format(DataType.AZIMUTH.getUnits(),data[0]));
 			break;
 		case BEARING:
-			textView.setText(String.format(DataType.BEARING.getUnits(),data[0]));
+			if (data[0] > 0) {
+				textView.setText(String.format(DataType.BEARING.getUnits(),data[0]));
+			}
 			break;
 		case SPEED_KPH:
 			textView.setText(Float.toString(data[0]));
@@ -159,9 +171,41 @@ public class TextGauge extends AbstractGauge implements SensorDataListener {
 			textView.setText(Float.toString(data[0]) + DataType.ALTITUDE.getUnits());
 			break;
 		case SATELLITE_ACCURACY:
-			textView.setText(Float.toString(data[0]) + DataType.SATELLITE_ACCURACY.getUnits());
+			lastAccuracy = data[0];
+			if (data[0] < 0) {
+				if (data[0] == -2) {
+					textView.setTextColor(Color.RED);
+					textView.setText(R.string.GPS_STOPPED);
+				} else {
+					textView.setTextColor(Color.YELLOW);
+					textView.setText(R.string.GPS_NO_FIX);
+				}
+			} else {
+				textView.setTextColor(Color.WHITE);
+				textView.setText(Float.toString(data[0]) + DataType.SATELLITE_ACCURACY.getUnits());
+			}
 			break;
 		case SATELLITE_COUNT:
+			//Log.d("EVDASH", "Text Gauge Received Data:" + data[0]);
+			int color;
+			switch((int)data[0]) {
+			case 0:case 1:case 2:
+				color = Color.RED;
+				break;
+			case 3: 
+				color = Color.YELLOW;
+				break;
+			case 4:case 5:case 6:
+				if (lastAccuracy > 0) {
+					color = Color.GREEN;	
+				} else {
+					color = Color.YELLOW;
+				}
+				break;
+			default:
+				color = Color.GREEN; 
+			}
+			textView.setTextColor(color);
 			textView.setText(Float.toString(data[0]));
 			break;
 		case LOCATION:

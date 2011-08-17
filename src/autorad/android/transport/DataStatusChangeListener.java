@@ -2,6 +2,6 @@ package autorad.android.transport;
 
 public interface DataStatusChangeListener {
 
-	public void onDataStatusChange(DataStatus status);
+	public void onDataStatusChange(SourceType type, DataStatus status);
 
 }

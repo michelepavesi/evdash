@@ -59,7 +59,9 @@ public class Soliton1UdpReceiver implements Runnable {
 			// Create a packet to receive data into the buffer
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 			if (statusListener != null) {
-				statusListener.onDataStatusChange(DataStatus.WAITING);
+				statusListener.onDataStatusChange(SourceType.MOTOR_CONTROLLER, DataStatus.WAITING);
+			} else {
+				Log.w(C.TAG, "Soliton1 UDP Data Status Listener not set");
 			}
 			new Thread(new Runnable() {
 				public void run() {
@@ -67,7 +69,7 @@ public class Soliton1UdpReceiver implements Runnable {
 						SystemClock.sleep(10000);
 						if ((System.currentTimeMillis() - lastRecieve) > 15000) {
 							if (statusListener != null) {
-								statusListener.onDataStatusChange(DataStatus.WAITING);
+								statusListener.onDataStatusChange(SourceType.MOTOR_CONTROLLER, DataStatus.WAITING);
 							}
 						}
 					}
@@ -79,7 +81,7 @@ public class Soliton1UdpReceiver implements Runnable {
 				// Wait to receive a datagram
 				dsocket.receive(packet);
 				if (statusListener != null) {
-					statusListener.onDataStatusChange(DataStatus.RECEIVING);
+					statusListener.onDataStatusChange(SourceType.MOTOR_CONTROLLER, DataStatus.RECEIVING);
 				}
 				lastRecieve = System.currentTimeMillis();
 				
@@ -99,15 +101,15 @@ public class Soliton1UdpReceiver implements Runnable {
 		        Arrays.fill(dataBuffer, (char)0);
 		        Arrays.fill(buffer, (byte)0);
 		        
-		        SystemClock.sleep(100);
+		        //SystemClock.sleep(100);
 		    }	
 			if (statusListener != null) {
-				statusListener.onDataStatusChange(DataStatus.STOPPED);
+				statusListener.onDataStatusChange(SourceType.MOTOR_CONTROLLER, DataStatus.STOPPED);
 			}
 		    if (C.D) Log.d(C.TAG, "UdpReciever Stopped");
 		} catch (Exception e) {
 			if (statusListener != null) {
-				statusListener.onDataStatusChange(DataStatus.STOPPED);
+				statusListener.onDataStatusChange(SourceType.MOTOR_CONTROLLER, DataStatus.STOPPED);
 			}
 			Log.e(C.TAG, e.getMessage(), e);
 	    }

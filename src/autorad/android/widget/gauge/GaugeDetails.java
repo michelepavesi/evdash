@@ -17,9 +17,10 @@ public class GaugeDetails {
 	private boolean rotateClockwise;
 	
 	private GaugeSize defaultSize;
+	private GaugeSize maxSize;
 	
 	public GaugeDetails(GaugeStyle style, String units, int startAngle, int endAngle,
-			int restAngle, GaugeSize defaultSize, int minDataValue, 
+			int restAngle, GaugeSize defaultSize, GaugeSize maxSize, int minDataValue, 
 			int maxDataValue, boolean rotateClockwise, DataType... dataTypes) {
 		this.style = style;
 		this.units = units;
@@ -30,6 +31,7 @@ public class GaugeDetails {
 		this.maxDataValue = maxDataValue;
 		this.rotateClockwise = rotateClockwise;
 		this.defaultSize = defaultSize;
+		this.maxSize = maxSize;
 		this.dataTypes = dataTypes;
 	}
 	
@@ -66,6 +68,9 @@ public class GaugeDetails {
 	}
 	public GaugeSize getDefaultSize() {
 		return defaultSize;
+	}
+	public GaugeSize getMaxSize() {
+		return maxSize;
 	}
 	public boolean getRotateClockwise() {
 		return rotateClockwise;

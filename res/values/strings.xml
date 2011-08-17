@@ -1,5 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, DashDisplay!</string>
-    <string name="app_name">Ev Dash</string>
+    <string name="app_name">EV Speedo</string>
+    
+    <string name="HIDE_BANNER">Click Ad opens then hides banner</string>
+    
+    <string name="TOAST_POSITION_SAVED">Gauge position saved</string>
+    <string name="TOAST_TOUCH_ITEM_TO_CALIBRATE">Touch gauge to calibrate</string>
+    <string name="TOAST_TOO_MANY_GAUGES">Too many gauges (not enough phone memory)</string>
+	
+	<string name="TOAST_ONLY_ONE_MAP_ALLOWED">Only one map allowed</string>
+	
+	<string name="MENU_ADD_REMOVE">Add Gauge</string>
+		<string name="MENU_ADD_RPM">Motor RPM</string>
+		<string name="MENU_ADD_KPH">Speed km/h</string>
+		<string name="MENU_ADD_MPH">Speed mph</string>
+		
+		<string name="MENU_ADD_MPH_MINI">Speed mph - Old skool Mini</string>
+		<string name="MENU_ADD_AMPS">High Amps 150-1800A</string>
+		<string name="MENU_ADD_LOWAMPS">Low Amps 0-180A</string>
+		<string name="MENU_ADD_VOLT">Traction Pack Volts</string>
+		<string name="MENU_ADD_TEMP">Controller Temperature</string>
+		<string name="MENU_ADD_GPSINFO">GPS Info</string>
+		<string name="MENU_ADD_LATG">Lateral G-force</string>
+		<string name="MENU_ADD_ACCG">Acceleration G-force</string>
+		<string name="MENU_ADD_MAP">Map</string>
+    	<string name="MENU_ADD_KNOTS">Speed Knots</string>
+    
+    <string name="MENU_UNLOCK">Unlock</string>
+	<string name="MENU_LOCK">Lock</string>
+	<string name="MENU_LOG">Enable Log</string>
+	<string name="MENU_STOPLOG">Disable Log</string>
+	
+	<string name="MENU_EXIT">Exit</string>
+	<string name="MENU_HELP">Help</string>
+	
+	<string name="MENU_GAUGE_SMALLER">Reduce Size</string>
+	<string name="MENU_GAUGE_BIGGER">Increase Size</string>
+	<string name="MENU_GAUGE_CANCEL">Cancel</string>
+	<string name="MENU_GAUGE_REMOVE">Remove</string>
+	<string name="MENU_GAUGE_CALIBRATE">Calibrate</string>
+	<string name="MENU_GAUGE_TOGGLEMAP">Toggle Satellite View</string>
+	<string name="MENU_GAUGE_SEARCH">Search</string>
+	
+	<string name="SEARCH_KEYWORD">Search keyword (eg. coffee)</string>
+	
+	<string name="LABEL_VOLT">Voltage</string>
+    <string name="LABEL_CURRENT">Current</string>
+    <string name="LABEL_TEMP">Temperature</string>
+    <string name="LABEL_RPM">RPM</string>
+    <string name="LABEL_SPEED">Speed</string>
+    <string name="LABEL_DISTANCE">Distance</string>
+    <string name="LABEL_BEARING">Bearing</string>
+    <string name="LABEL_AZIMUTH">Azimuth</string>
+    <string name="LABEL_LOCATION">Location</string>
+    <string name="LABEL_ALTITUDE">Altitude</string>
+    <string name="LABEL_SATELLITES">Satellites</string>
+    <string name="LABEL_ACCURACY">Accuracy</string>
+    <string name="LABEL_LATG">Lateral G-force</string>
+    <string name="LABEL_ACCG">Acceleration G-force</string>
+    
+    <string name="GPS_NO_FIX">NO FIX</string>
+    <string name="GPS_STOPPED">STOPPED</string>
+    
+    <string name="MENU_SET_UNITS">Set Units</string>
+    <string name="MENU_SET_UNITS_KM">kph</string>
+    <string name="MENU_SET_UNITS_MILES">mph</string>
+    <string name="MENU_SET_UNITS_KNOTS">knot</string>
+    
+    
 </resources>

@@ -25,14 +25,38 @@ public abstract class AbstractGauge extends FrameLayout implements SensorDataLis
 	
 	public abstract void calibrate();
 	
+	public abstract void passivate();
+	
+	public abstract void unpassivate();
+	
 	public abstract String getToastString();
 	
-	public abstract void cleanup();
+	public abstract void destroy();
 	
 	public abstract void applySettings();
 	
-	public AbsoluteLayout.LayoutParams getLayout() {
-		return new AbsoluteLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, gaugeSettings.getPosX() , gaugeSettings.getPosY());
+	public AbsoluteLayout.LayoutParams getAbsoluteLayout() {
+		switch (gaugeSettings.getSize()) {
+		case TINY:
+			size = 100;
+			break;
+		case VERY_SMALL:
+			size = 150;
+			break;
+		case SMALL:
+			size = 200;
+			break;
+		case MEDIUM:
+			size = 300;
+			break;
+		case LARGE:
+			size = 400;
+			break;
+		}
+
+		AbsoluteLayout.LayoutParams params = new AbsoluteLayout.LayoutParams(size, size, gaugeSettings.getPosX(), gaugeSettings.getPosY());
+		return params;
+		//return new AbsoluteLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, gaugeSettings.getPosX() , gaugeSettings.getPosY());
 	}
 
 	public DataType[] getDataTypes() {
@@ -52,7 +76,7 @@ public abstract class AbstractGauge extends FrameLayout implements SensorDataLis
 		if (C.D) Log.d(C.TAG, "Saving gauge - " + gaugeType.name() + ": " + jsonSettings); 
 		SharedPreferences gPrefs = ctx.getSharedPreferences("G", Context.MODE_PRIVATE);
 	    SharedPreferences.Editor prefsEditor = gPrefs.edit();
-	    prefsEditor.putString(gaugeType.name(), jsonSettings);
+	    prefsEditor.putString(gaugeSettings.getId(), jsonSettings);
 	    prefsEditor.commit();
 	}
 

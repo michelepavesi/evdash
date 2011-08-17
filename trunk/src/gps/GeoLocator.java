@@ -4,8 +4,14 @@
  */
 package gps;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,6 +36,9 @@ import autorad.android.C;
 import autorad.android.sensor.DataType;
 import autorad.android.sensor.SensorDataListener;
 import autorad.android.sensor.SensorDataSource;
+import autorad.android.transport.DataStatus;
+import autorad.android.transport.DataStatusChangeListener;
+import autorad.android.transport.SourceType;
 import autorad.android.util.Convert;
 
 
@@ -42,7 +51,7 @@ public class GeoLocator
 
 
     // Time in ms for which cached satellite data is valid.
-    private static final int DATA_CACHE_TIME = 10 * 1000;
+    private static final int DATA_CACHE_TIME = 2 * 1000;  // was 10
 
     // Time in ms for which cached geomagnetic data is valid.
     private static final int GEOMAG_CACHE_TIME = 2 * 3600 * 1000;
@@ -55,6 +64,10 @@ public class GeoLocator
     // Application handle.
     private Context appContext;
 
+    LocationProvider prov;
+    
+    private DataStatusChangeListener statusListener;
+    
 	private ArrayList<SensorDataListener> listeners = new ArrayList<SensorDataListener>();
 	private Lock lock = new ReentrantLock();
     
@@ -91,7 +104,10 @@ public class GeoLocator
 	private float[] magValues = null;
 	
 
-
+	BufferedWriter writer;
+	DateFormat formatter;
+	
+	long lastChange = 0;
 	
     // ******************************************************************** //
     // Local Constants and Classes.
@@ -103,6 +119,7 @@ public class GeoLocator
      * satellite's PRN, which is a 1023-bit number.
      */
     static final int NUM_SATS = 32;
+    int lastNumSats = 0;
    
     /**
      * Cached info on a satellite's status.
@@ -142,28 +159,46 @@ public class GeoLocator
      * @param   sman            The SensorManager to get data from.
      */
     public GeoLocator(Context context) {
-             
-
         appContext = context;
-        sensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
-
-        // Set up the satellite data cache.  For simplicity, we allocate
-        // NUM_SATS + 1 so we can index by PRN number.
-        satCache = new GpsInfo[NUM_SATS + 1];
-        for (int i = 1; i <= NUM_SATS; ++i) {
-        	satCache[i] = new GpsInfo(i);
-        }
-        
-        numSats = 0;
-
-        // Get the information providers we need.
-        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-
+        formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG, Locale.getDefault()); 
     }
 
-           
+    public void registerDataStatusChangeListener(DataStatusChangeListener listener) {
+		this.statusListener = listener;
+    }
 
 
+    public void startDataLogging() {
+		if (writer == null) {
+			File file = new File("/sdcard/EV_Speedo.log");
+	        try {
+	        	if (!file.exists()) {
+	        		file.createNewFile();
+	        		Log.e(C.TAG, "File Created!");
+	        	}
+	        	
+	        	writer = new BufferedWriter(new FileWriter(file));
+	        }
+	        catch (IOException e) {
+	        	Log.e(C.TAG, e.toString());
+	        } 
+		}
+		
+	}
+	
+	public void stopDataLogging() {
+		
+       	try {
+	       	if (writer != null) {
+	       		writer.flush();
+	       		writer.close();
+	        }
+       	} catch (IOException e) {
+       		Log.e(C.TAG, e.toString());
+       	}
+
+		
+	}
 
 
         // ******************************************************************** //
@@ -176,61 +211,86 @@ public class GeoLocator
      * starting here.
      */
     public void start() {
-        // Register for location updates.
-    	LocationProvider prov = locationManager.getProvider(LocationManager.GPS_PROVIDER);
+    	sensorManager = (SensorManager)appContext.getSystemService(Context.SENSOR_SERVICE);
+
+        // Set up the satellite data cache.  For simplicity, we allocate
+        // NUM_SATS + 1 so we can index by PRN number.
+        satCache = new GpsInfo[NUM_SATS + 1];
+        for (int i = 1; i <= NUM_SATS; ++i) {
+        	satCache[i] = new GpsInfo(i);
+        }
+        
+        numSats = 0;
+
+        // Get the information providers we need.
+        locationManager = (LocationManager) appContext.getSystemService(Context.LOCATION_SERVICE);
+    }
+   
+    public void resume() {
+   
+    	// Get orientation updates.
+        registerSensor(Sensor.TYPE_ACCELEROMETER);
+        registerSensor(Sensor.TYPE_MAGNETIC_FIELD);	
+        
+    	if (statusListener != null) {
+			statusListener.onDataStatusChange(SourceType.GPS, DataStatus.WAITING);
+		}
+    	
+    	// Register for location updates.
+    	if (prov == null) {
+    	prov = locationManager.getProvider(LocationManager.GPS_PROVIDER);
+    	}
     	if (prov != null) {
-    		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0f, this);
+    		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0f, this);
                    
     		// For the GPS, also add a GPS status listener to get
     		// additional satellite and fix info.
     		locationManager.addGpsStatusListener(this);
-                   
+    		
     		// Prime the pump with the last known location.
     		Location prime = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
     		if (prime != null)
     			onLocationChanged(prime);
         }
-    
-       
-        // Get orientation updates.
-        registerSensor(Sensor.TYPE_ACCELEROMETER);
-        registerSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+    	
+        
     }
-   
        
     private final void registerSensor(int type) {
     	Sensor sensor = sensorManager.getDefaultSensor(type);
     	if (sensor != null)
     		sensorManager.registerListener(this, sensor,
-                                           SensorManager.SENSOR_DELAY_NORMAL);
+                                           SensorManager.SENSOR_DELAY_UI);
     }
        
        
-       
+    public void pause() {
+    	locationManager.removeGpsStatusListener(this);
+		locationManager.removeUpdates(this);
+    	sensorManager.unregisterListener(this);
+    }
 
+    public void destroy() {
+    	locationManager = null;
+    	sensorManager = null;
+        try {
+        	lock.lock();
+	    	listeners.clear();
+        } finally {
+        	lock.unlock();
+        }
+    }
+    
         /**
          * Stop this view.  This notifies the view that it should stop
          * receiving and displaying data, and generally stop using
          * resources.
          */
     public void stop() {
-        try {
-        	lock.lock();
-        
-	    	appContext = null;
-	        	
-			locationManager.removeGpsStatusListener(this);
-			locationManager.removeUpdates(this);
-	    	locationManager = null;
-	            
-	    	sensorManager.unregisterListener(this);
-	    	sensorManager = null;
-	            
-	    	listeners.clear();
-        } finally {
-        	lock.unlock();
-        }
-    	
+    	locationManager = null;
+    	sensorManager = null;
+    	satCache = null;
     }
        
 
@@ -247,8 +307,17 @@ public class GeoLocator
         public void onLocationChanged(Location loc) {
         	try {       		
     			lock.lock();
-
+    			if (statusListener != null) {
+    				statusListener.onDataStatusChange(SourceType.GPS, DataStatus.RECEIVING);
+    			}
+    			
     			Log.d(C.TAG, "Location accuracy: " + loc.getAccuracy());
+    			float bearing;
+    			if (gpsLocation == null) {
+    				bearing = -1;
+    			} else {
+    				bearing = calculateBearing(gpsLocation, loc);
+    			}
     			for (SensorDataListener listener : listeners) {
     				for (DataType dt : listener.getDataTypes()) {
 	    				switch (dt) {
@@ -266,7 +335,7 @@ public class GeoLocator
 	    					break;
 	    		
 	    				case LOCATION:
-	    					Log.d(C.TAG, "latitude : " + Location.convert(loc.getLatitude(), Location.FORMAT_SECONDS));
+	    					//Log.d(C.TAG, "latitude : " + Location.convert(loc.getLatitude(), Location.FORMAT_SECONDS));
 	    					listener.onData(DataType.LOCATION, (float)loc.getLatitude(), (float)loc.getLongitude());
 	    					break;
 	    	
@@ -277,7 +346,7 @@ public class GeoLocator
 	    					
 	    				case BEARING:
 	    					if (gpsLocation != null) {
-	    						listener.onData(DataType.BEARING, calculateBearing(gpsLocation, loc));
+	    						listener.onData(DataType.BEARING, bearing);
 	    					}
 	    					break;
 	    				case SATELLITE_ACCURACY:
@@ -290,13 +359,33 @@ public class GeoLocator
     				}
     			}
     			
+    			if (writer != null) {
+    				StringBuilder builder = new StringBuilder();
+    				
+    				builder.append(formatter.format(new Date(loc.getTime()))).append(",");
+    				builder.append(loc.getSpeed()).append(",");
+    				builder.append(loc.getLatitude()).append(",");
+    				builder.append(loc.getLongitude()).append(",");
+    				builder.append(loc.getBearing()).append(",");
+    				builder.append(loc.getAccuracy());
+    				
+    				try {
+    					writer.write(builder.toString());
+    					writer.newLine();
+    				} catch (IOException e) {
+    					Log.e(C.TAG, "Error writing log file: " + e.getMessage());
+    				}
+    			}
+    			
     			gpsLocation = loc;
     		} finally {
     			lock.unlock();
+    			lastChange = System.currentTimeMillis();
     		}
         }
 
-         
+        
+        
         /**
          * Called when the provider status changes.  This method is called
          * when a provider is unable to fetch a location or if the provider
@@ -320,6 +409,18 @@ public class GeoLocator
         public void onStatusChanged(String provider, int status, Bundle extras) {
             try {
                 Log.i(C.TAG, "Provider status: " + provider + "=" + status);
+                if (statusListener == null) return;                
+                switch (status) {
+                case LocationProvider.OUT_OF_SERVICE:
+                	statusListener.onDataStatusChange(SourceType.GPS, DataStatus.STOPPED);                    
+                    break;
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                	statusListener.onDataStatusChange(SourceType.GPS, DataStatus.WAITING);
+                    break;
+                case LocationProvider.AVAILABLE:
+                	
+                    break;
+                }
             } catch (Exception e) {
             	Log.e(C.TAG, e.getMessage(),e);
             }
@@ -371,25 +472,7 @@ public class GeoLocator
     				lock.unlock();
     			}
 
-                    //            // Fake some satellites, for testing.
-                    //            Random r = new Random();
-                    //            r.setSeed(4232);
-                    //            for (int i = 1; i <= NUM_SATS; ++i) {
-                    //                GpsInfo ginfo = satCache[i];
-                    //                if (i % 3 == 0) {
-                    //                    ginfo.time = time - r.nextInt(5000);
-                    //                    ginfo.azimuth = r.nextFloat() * 360.0f;
-                    //                    ginfo.elev = r.nextFloat() * 90.0f;
-                    //                    ginfo.snr = 12;
-                    //                    ginfo.hasAl = r.nextInt(4) != 0;
-                    //                    ginfo.hasEph = ginfo.hasAl && r.nextInt(3) != 0;
-                    //                    ginfo.used = ginfo.hasEph && r.nextBoolean();
-                    //                } else {
-                    //                    ginfo.time = 0;
-                    //                }
-                    //            }
-
-                    // Post-process the sats.
+              
     			numSats = 0;
     			for (int prn = 1; prn <= NUM_SATS; ++prn) {
     				GpsInfo ginfo = satCache[prn];
@@ -408,17 +491,59 @@ public class GeoLocator
                     	++numSats;
                     }
                 }
-    			//Log.d(C.TAG, "Number Satellites: " + numSats);
+    			
+    			
+    			if (lastNumSats != numSats) {
+    				Log.d(C.TAG, "Number Satellites: " + numSats);
+    				lastNumSats = numSats;
+	    			if (numSats < 5) {
+	    				statusListener.onDataStatusChange(SourceType.GPS, DataStatus.WAITING);
+	    				for (SensorDataListener listener : listeners) {
+	        				for (DataType dt : listener.getDataTypes()) {
+	    	    				switch (dt) {
+	    	    				case SATELLITE_ACCURACY:
+	    	    					listener.onData(DataType.SATELLITE_ACCURACY, -1);
+	    	    				}
+	        				}
+	    				}
+	    			}
+    			}
     			break;
-                case GpsStatus.GPS_EVENT_STARTED:
-                case GpsStatus.GPS_EVENT_STOPPED:
-                case GpsStatus.GPS_EVENT_FIRST_FIX:
-                    break;
-                }
-            } catch (Exception e) {
-            	Log.e(C.TAG, e.getMessage(),e);
+    			
+            case GpsStatus.GPS_EVENT_STARTED:
+            	Log.d(C.TAG, ": GPS Event Started");
+            	statusListener.onDataStatusChange(SourceType.GPS, DataStatus.WAITING);
+            	for (SensorDataListener listener : listeners) {
+    				for (DataType dt : listener.getDataTypes()) {
+	    				switch (dt) {
+	    				case SATELLITE_ACCURACY:
+	    					listener.onData(DataType.SATELLITE_ACCURACY, -1);
+	    				}
+    				}
+				}
+                break;
+            case GpsStatus.GPS_EVENT_STOPPED:
+            	Log.d(C.TAG, ": GPS Event Stopped");
+            	statusListener.onDataStatusChange(SourceType.GPS, DataStatus.STOPPED);
+            	for (SensorDataListener listener : listeners) {
+    				for (DataType dt : listener.getDataTypes()) {
+	    				switch (dt) {
+	    				case SATELLITE_ACCURACY:
+	    					listener.onData(DataType.SATELLITE_ACCURACY, -2);
+	    				}
+    				}
+				}
+            	break;
+            case GpsStatus.GPS_EVENT_FIRST_FIX:
+            	Log.d(C.TAG, ": GPS Event First Fix");
+            	statusListener.onDataStatusChange(SourceType.GPS, DataStatus.RECEIVING);
+                break;
+            
             }
+        } catch (Exception e) {
+        	Log.e(C.TAG, e.getMessage(),e);
         }
+    }
 
 
     // ******************************************************************** //
@@ -490,27 +615,9 @@ public class GeoLocator
                 magValues[1] = values[1];
                 magValues[2] = values[2];
             }
-            checkGeomag();
-            if (accelValues == null || magValues == null || geomagneticField == null)
-                return;
-
-            // Get the device rotation matrix.
-            float[] rotate = new float[9];
-            boolean ok = SensorManager.getRotationMatrix(rotate, null, accelValues, magValues);
-            if (!ok)
-                return;
-
-            Log.i(C.TAG, "AccX=" + accelValues[0] + "AccY=" + accelValues[1]);
             
-            // Compute the device's orientation based on the rotation matrix.
-            final float[] orient = new float[3];
-            SensorManager.getOrientation(rotate, orient);
-            
-            // Get the azimuth of device Y from magnetic north.  Compensate for
-            // magnetic declination.
-            final float azimuth = (float) Math.toDegrees(orient[0]);
-            final float dec = geomagneticField.getDeclination();
-            //Log.d(C.TAG, "Azimuth = " + avgAzimuth.average(azimuth + dec - 90));
+            if (accelValues == null || magValues == null)
+                return;
             
             lock.lock();
             locked = true;
@@ -519,13 +626,30 @@ public class GeoLocator
     				switch (dt) {
     				
     				case AZIMUTH:
-    					listener.onData(DataType.AZIMUTH, avgAzimuth.average(azimuth + dec + 90));
+    					checkGeomag();
+    					if (geomagneticField != null) {
+    			            // Get the device rotation matrix.
+    			            float[] rotate = new float[9];
+    			            boolean ok = SensorManager.getRotationMatrix(rotate, null, accelValues, magValues);
+    			            if (!ok)
+    			                break;
+    						// Compute the device's orientation based on the rotation matrix.
+    			            final float[] orient = new float[3];
+    			            SensorManager.getOrientation(rotate, orient);
+    			            
+    			            // Get the azimuth of device Y from magnetic north.  Compensate for
+    			            // magnetic declination.
+    			            final float azimuth = (float) Math.toDegrees(orient[0]);
+    			            final float dec = geomagneticField.getDeclination();
+    			            //Log.d(C.TAG, "Azimuth = " + avgAzimuth.average(azimuth + dec - 90));
+    			            listener.onData(DataType.AZIMUTH, avgAzimuth.average(azimuth + dec + 90));
+    					}
     					break;
     				case LATERALG:
-    					listener.onData(DataType.LATERALG, accelValues[1]);
+    					listener.onData(DataType.LATERALG, avgAccG.average(accelValues[1]));
     					break;
     				case ACCELERATIONG:
-    					listener.onData(DataType.ACCELERATIONG, accelValues[2]);
+    					listener.onData(DataType.ACCELERATIONG, avgLatG.average(accelValues[2]));
     					break;
     				}
 				}
@@ -540,6 +664,8 @@ public class GeoLocator
 
     private DigitalAverage avgAzimuth = new DigitalAverage();
 
+    private DigitalAverage avgLatG = new DigitalAverage();
+    private DigitalAverage avgAccG = new DigitalAverage();
 
 	public void onProviderDisabled(String arg0) {
 		
@@ -594,7 +720,7 @@ public class GeoLocator
 	
 	private class DigitalAverage {
 
-        final int history_len = 8;
+        final int history_len = 4;
         double[] mLocHistory = new double[history_len];
         int mLocPos = 0;
 
@@ -615,7 +741,7 @@ public class GeoLocator
 
             return avg;
         }
-        
+        /*
         int range() {
         	double min = mLocHistory[0];
         	double max = mLocHistory[0];
@@ -625,6 +751,6 @@ public class GeoLocator
             }
             
             return (int)(max-min);
-        }
+        }*/
     }
 }

@@ -11,6 +11,7 @@ public enum GaugeType {
 										 312, 				// end angle
 										 13, 				// rest angle
 										 GaugeSize.LARGE, 	// defaut gauge size
+										 GaugeSize.VERYLARGE1, 	// max gauge size
 										 0, 				// min data range
 										 1800, 				// max data range
 										 true,				// clockwise rotation
@@ -24,6 +25,7 @@ public enum GaugeType {
 										 312, 				// end angle
 										 40, 				// rest angle
 										 GaugeSize.MEDIUM,  // defaut gauge size
+										 GaugeSize.LARGE, 	// max gauge size
 										 0, 				// min data range
 										 180, 				// max data range
 										 true,				// clockwise rotation
@@ -37,6 +39,7 @@ public enum GaugeType {
 										 312, 				// end angle
 										 38, 				// rest angle
 										 GaugeSize.LARGE, 	// defaut gauge size
+										 GaugeSize.VERYLARGE1, 	// max gauge size
 										 0, 				// min data range
 										 8000, 				// max data range
 										 true,			// clockwise rotation
@@ -50,6 +53,7 @@ public enum GaugeType {
 										 145, 				// end angle
 										 90, 				// rest angle
 										 GaugeSize.SMALL, 	// defaut gauge size
+										 GaugeSize.LARGE, 	// max gauge size
 										 0, 				// min data range
 										 100, 				// max data range
 										 true,			// clockwise rotation
@@ -63,6 +67,7 @@ public enum GaugeType {
 										 200, 				// end angle
 										 270, 				// rest angle
 										 GaugeSize.SMALL, 	// defaut gauge size
+										 GaugeSize.LARGE, 	// max gauge size
 										 120, 				// min data range
 										 180, 				// max data range
 										 false,			// anti-clockwise rotation
@@ -76,6 +81,7 @@ public enum GaugeType {
 										 312, 				// end angle
 										 41, 				// rest angle
 										 GaugeSize.LARGE, 	// defaut gauge size
+										 GaugeSize.VERYLARGE1, 	// max gauge size
 										 0, 				// min data range
 										 180, 				// max data range
 										 true,			// clockwise rotation
@@ -88,6 +94,7 @@ public enum GaugeType {
 										 312, 				// end angle
 										 41, 				// rest angle
 										 GaugeSize.LARGE, 	// defaut gauge size
+										 GaugeSize.VERYLARGE1, 	// max gauge size
 										 0, 				// min data range
 										 180, 				// max data range
 										 true,			// clockwise rotation
@@ -100,16 +107,19 @@ public enum GaugeType {
 										 304, 				// end angle
 										 44, 				// rest angle
 										 GaugeSize.LARGE, 	// defaut gauge size
+										 GaugeSize.VERYLARGE1, 	// max gauge size
 										 0, 				// min data range
 										 130, 				// max data range
 										 true,			// clockwise rotation
 										 DataType.SPEED_MPH // Data type
 										 )),
+
 										 
 	GPS_INFO(new GaugeDetails(  
 										 GaugeStyle.TEXT,
 										 GaugeSize.MEDIUM, 	// defaut gauge size
-										 DataType.AZIMUTH, DataType.BEARING, DataType.ALTITUDE, DataType.LOCATION, 
+										 
+										 DataType.BEARING, DataType.ALTITUDE, DataType.LOCATION, 
 										 DataType.SATELLITE_COUNT, DataType.SATELLITE_ACCURACY
 										  // Data type
 										 )),
@@ -120,6 +130,7 @@ public enum GaugeType {
 										 235, 				// end angle
 										 180, 				// rest angle
 										 GaugeSize.MEDIUM, 	// defaut gauge size
+										 GaugeSize.LARGE, 	// max gauge size
 										 -15, 				// min data range
 										 15, 				// max data range
 										 true,			// clockwise rotation
@@ -132,6 +143,7 @@ public enum GaugeType {
 										 145, 				// end angle
 										 90, 				// rest angle
 										 GaugeSize.MEDIUM, 	// defaut gauge size
+										 GaugeSize.LARGE, 	// max gauge size
 										 -15, 				// min data range
 										 15, 				// max data range
 										 true,			// clockwise rotation

@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">EV Speedo</string>
-    
-    <string name="HIDE_BANNER">Click Ad opens then hides banner</string>
-    
+    <string name="app_name">EV DASH</string>
+        
     <string name="TOAST_POSITION_SAVED">Gauge position saved</string>
     <string name="TOAST_TOUCH_ITEM_TO_CALIBRATE">Touch gauge to calibrate</string>
     <string name="TOAST_TOO_MANY_GAUGES">Too many gauges (not enough phone memory)</string>
@@ -33,6 +31,7 @@
 	
 	<string name="MENU_EXIT">Exit</string>
 	<string name="MENU_HELP">Help</string>
+	<string name="MENU_ABOUT">About</string>
 	
 	<string name="MENU_GAUGE_SMALLER">Reduce Size</string>
 	<string name="MENU_GAUGE_BIGGER">Increase Size</string>

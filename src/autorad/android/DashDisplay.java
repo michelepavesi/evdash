@@ -7,6 +7,7 @@ import java.util.Map;
 
 import controller.Soliton1;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -35,6 +36,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -108,11 +110,11 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
         
         
         TextView autoradLabel = new TextView(this);
-        AbsoluteLayout.LayoutParams autoradTextLayout = new AbsoluteLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 15 , getWindow().getWindowManager().getDefaultDisplay().getHeight() - 40);
+        AbsoluteLayout.LayoutParams autoradTextLayout = new AbsoluteLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 15 , getWindow().getWindowManager().getDefaultDisplay().getHeight() - 16);
         autoradLabel.setLayoutParams(autoradTextLayout);
-        autoradLabel.setTypeface(Typeface.createFromAsset(this.getAssets(), "fonts/Faith.ttf"));
-        autoradLabel.setText("AutoRAD Industries");
-        autoradLabel.setTextSize(18);
+        // Keep this label.
+        autoradLabel.setText("EVDash 2011 Open Source Version");
+        autoradLabel.setTextSize(9);
         layout.addView(autoradLabel);
 
         
@@ -730,8 +732,8 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 	private final static int MENU_EXIT = 4;
 	private final static int MENU_ENABLE_LOG = 5;
 	private final static int MENU_DISABLE_LOG = 6;
-	private final static int MENU_PAY = 7;
-	private final static int MENU_HELP = 8;
+	//private final static int MENU_PAY = 7;
+	private final static int MENU_ABOUT = 8;
 	
 	private final static int SUBMENU_GROUP_ADDGAUGE = 10;
 	private final static int SUBMENU_ADDGAUGE_RPM = 11;
@@ -790,7 +792,7 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 		menu.add(0, MENU_LOCK, 0, R.string.MENU_LOCK);
 		
 		
-		menu.add(0, MENU_HELP, 0, R.string.MENU_HELP);
+		menu.add(0, MENU_ABOUT, 0, R.string.MENU_ABOUT);
 				
 		menu.add(0, MENU_EXIT, 0, R.string.MENU_EXIT);
 
@@ -906,7 +908,9 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 	    	startDataLogging();
 	    	return true;
 
-	    	
+	    case MENU_ABOUT:
+	    	showAboutDialog();
+	    	return true;
 //	    case MENU_HELP:
 //	    	Intent ihelp = new Intent(this, DonateWebView.class);
 //	    	Bundle bhelp = new Bundle();
@@ -1060,7 +1064,7 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 		        }
 		        return false;
 		    }
-		    
+		    /*
 		    @Override
 		    public void onLongPress(MotionEvent e) {
 		    	if (contextClickHandled) {
@@ -1081,6 +1085,7 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 		    	}
 		    	super.onLongPress(e);
 		    }
+		    */
 
 	 }
 
@@ -1117,9 +1122,9 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 		 inFromRight.setDuration(500);
 		 inFromRight.setInterpolator(new AccelerateInterpolator());
 		 return inFromRight;
-		 }
+	 }
 
-		 private Animation outToLeftAnimation() {
+	 private Animation outToLeftAnimation() {
 		 Animation outtoLeft = new TranslateAnimation(
 		 Animation.RELATIVE_TO_PARENT, 0.0f,
 		 Animation.RELATIVE_TO_PARENT, -1.0f,
@@ -1128,9 +1133,9 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 		 outtoLeft.setDuration(500);
 		 outtoLeft.setInterpolator(new AccelerateInterpolator());
 		 return outtoLeft;
-		 }
+	}
 
-		 private Animation inFromLeftAnimation() {
+	private Animation inFromLeftAnimation() {
 		 Animation inFromLeft = new TranslateAnimation(
 		 Animation.RELATIVE_TO_PARENT, -1.0f,
 		 Animation.RELATIVE_TO_PARENT, 0.0f,
@@ -1139,9 +1144,9 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 		 inFromLeft.setDuration(500);
 		 inFromLeft.setInterpolator(new AccelerateInterpolator());
 		 return inFromLeft;
-		 }
+	}
 
-		 private Animation outToRightAnimation() {
+	private Animation outToRightAnimation() {
 		 Animation outtoRight = new TranslateAnimation(
 		 Animation.RELATIVE_TO_PARENT, 0.0f,
 		 Animation.RELATIVE_TO_PARENT, +1.0f,
@@ -1150,7 +1155,39 @@ public class DashDisplay extends Activity implements DataStatusChangeListener {
 		 outtoRight.setDuration(500);
 		 outtoRight.setInterpolator(new AccelerateInterpolator());
 		 return outtoRight;
-		 }
+	}
 
+	private void showAboutDialog() {
+		final Dialog dialog = new Dialog(this);
+    	dialog.setTitle("About EVDash 2011");
+    	dialog.setCancelable(true);
+    	
+    	LinearLayout layout = new LinearLayout(this);
+    	layout.setOrientation(LinearLayout.VERTICAL);
+    	
+    	    	
+    	TextView text0 = new TextView(this);
+    	text0.setTextSize(14);
+    	
+    	// Do not modify
+		text0.setText(" Originally developed by AUTO-RAD INDUSTRIES in New Zealand.\n" +
+					  " This is the open source version of \"EV Speedo\" available in the Android Market.\n"); 
+					  		
+					  
+		// Other Contributors add any about stuff here.
+				
+    	layout.addView(text0);
+    	
+    	TextView text = new TextView(this);
+    	text.setTextSize(14);
+		text.setText("\n\nCode License: GNU GPL v3 \n\n");
+    	layout.addView(text);
+    	
+    	dialog.addContentView(layout, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+    	
+    	//now that the dialog is set up, it's time to show it    
+    	dialog.show();
+	}
+		 
 
 }
